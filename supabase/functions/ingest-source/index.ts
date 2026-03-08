@@ -218,19 +218,24 @@ async function handleManualURL(source: any, manualUrl?: string): Promise<Handler
 }
 
 // ─── Handler router ─────────────────────────────────────────────────────────
+// Routes by ingest_method first, then source_type. Placeholder handlers are disabled.
 const HANDLER_MAP: Record<string, (source: any, extra?: any) => Promise<HandlerResult>> = {
   rss: handleRSS,
   mainstream: handleRSS,
   niche: handleRSS,
   think_tank: handleRSS,
   government: handleRSS,
-  api: handleNewsAPI,
-  youtube: handleYouTube,
   podcast: handlePodcast,
-  x: handleX,
-  telegram: handleTelegram,
   custom: handleManualURL,
+  // Disabled until real implementations exist:
+  // api: handleNewsAPI,
+  // youtube: handleYouTube,
+  // x: handleX,
+  // telegram: handleTelegram,
 };
+
+// Disabled placeholder handlers return a clear error
+const DISABLED_HANDLERS = new Set(['api', 'youtube', 'x', 'telegram']);
 
 // ─── XML Parsing Helpers ────────────────────────────────────────────────────
 function parseRSSItems(xml: string): Array<{
