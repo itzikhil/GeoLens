@@ -20,8 +20,8 @@ export function AdminAuditLog() {
   const { data: logs, isLoading, refetch } = useQuery({
     queryKey: ['audit-log'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('admin_audit_log' as any)
+      const { data, error } = await (supabase as any)
+        .from('admin_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);

@@ -27,8 +27,8 @@ export function AdminSettings() {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['system-settings'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('system_settings' as any)
+      const { data, error } = await (supabase as any)
+        .from('system_settings')
         .select('*')
         .order('key');
       if (error) throw error;
