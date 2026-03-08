@@ -203,13 +203,20 @@ export type Database = {
           created_at: string | null
           description: string | null
           end_date: string | null
+          grouping_rationale: string | null
           id: string
+          item_count: number | null
+          narrative_comparison: Json | null
           region_tags: string[] | null
           significance_score: number | null
           slug: string
+          source_diversity_count: number | null
           start_date: string | null
           status: Database["public"]["Enums"]["cluster_status"] | null
           title: string
+          top_actors: string[] | null
+          top_countries: string[] | null
+          top_topics: string[] | null
           topic_tags: string[] | null
           updated_at: string | null
         }
@@ -220,13 +227,20 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_date?: string | null
+          grouping_rationale?: string | null
           id?: string
+          item_count?: number | null
+          narrative_comparison?: Json | null
           region_tags?: string[] | null
           significance_score?: number | null
           slug: string
+          source_diversity_count?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["cluster_status"] | null
           title: string
+          top_actors?: string[] | null
+          top_countries?: string[] | null
+          top_topics?: string[] | null
           topic_tags?: string[] | null
           updated_at?: string | null
         }
@@ -237,13 +251,20 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_date?: string | null
+          grouping_rationale?: string | null
           id?: string
+          item_count?: number | null
+          narrative_comparison?: Json | null
           region_tags?: string[] | null
           significance_score?: number | null
           slug?: string
+          source_diversity_count?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["cluster_status"] | null
           title?: string
+          top_actors?: string[] | null
+          top_countries?: string[] | null
+          top_topics?: string[] | null
           topic_tags?: string[] | null
           updated_at?: string | null
         }
