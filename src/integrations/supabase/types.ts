@@ -255,7 +255,12 @@ export type Database = {
           error_message: string | null
           finished_at: string | null
           id: string
+          items_fetched: number | null
+          items_inserted: number | null
+          items_skipped_duplicate: number | null
           job_type: string
+          max_retries: number | null
+          retry_count: number | null
           source_id: string | null
           started_at: string | null
           stats_json: Json | null
@@ -266,7 +271,12 @@ export type Database = {
           error_message?: string | null
           finished_at?: string | null
           id?: string
+          items_fetched?: number | null
+          items_inserted?: number | null
+          items_skipped_duplicate?: number | null
           job_type: string
+          max_retries?: number | null
+          retry_count?: number | null
           source_id?: string | null
           started_at?: string | null
           stats_json?: Json | null
@@ -277,7 +287,12 @@ export type Database = {
           error_message?: string | null
           finished_at?: string | null
           id?: string
+          items_fetched?: number | null
+          items_inserted?: number | null
+          items_skipped_duplicate?: number | null
           job_type?: string
+          max_retries?: number | null
+          retry_count?: number | null
           source_id?: string | null
           started_at?: string | null
           stats_json?: Json | null
@@ -494,8 +509,10 @@ export type Database = {
           is_active: boolean | null
           language: string | null
           last_ingested_at: string | null
+          last_successful_ingest_at: string | null
           name: string
           notes: string | null
+          rate_limit_seconds: number | null
           region_tags: string[] | null
           reliability_score: number | null
           rss_url: string | null
@@ -514,8 +531,10 @@ export type Database = {
           is_active?: boolean | null
           language?: string | null
           last_ingested_at?: string | null
+          last_successful_ingest_at?: string | null
           name: string
           notes?: string | null
+          rate_limit_seconds?: number | null
           region_tags?: string[] | null
           reliability_score?: number | null
           rss_url?: string | null
@@ -534,8 +553,10 @@ export type Database = {
           is_active?: boolean | null
           language?: string | null
           last_ingested_at?: string | null
+          last_successful_ingest_at?: string | null
           name?: string
           notes?: string | null
+          rate_limit_seconds?: number | null
           region_tags?: string[] | null
           reliability_score?: number | null
           rss_url?: string | null
@@ -652,7 +673,13 @@ export type Database = {
         | "completed"
         | "failed"
         | "skipped"
-      job_status: "queued" | "running" | "completed" | "failed" | "cancelled"
+      job_status:
+        | "queued"
+        | "running"
+        | "completed"
+        | "partial_success"
+        | "failed"
+        | "cancelled"
       media_type:
         | "article"
         | "post"
@@ -828,7 +855,14 @@ export const Constants = {
         "failed",
         "skipped",
       ],
-      job_status: ["queued", "running", "completed", "failed", "cancelled"],
+      job_status: [
+        "queued",
+        "running",
+        "completed",
+        "partial_success",
+        "failed",
+        "cancelled",
+      ],
       media_type: [
         "article",
         "post",
