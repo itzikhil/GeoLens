@@ -1,73 +1,100 @@
-# Welcome to your Lovable project
+# GeoLens
 
-## Project info
+Open-source geopolitical intelligence platform. Ingests multi-source news via RSS, enriches with AI-extracted metadata, clusters related events, and presents them through an analytical dashboard.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Architecture
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+Sources (RSS) → ingest-source → items → enrich-item → event_clusters → React Dashboard
+                                                          ↕
+                                                    cluster-admin (merge/split/regenerate)
 ```
 
-**Edit a file directly in GitHub**
+- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui
+- **Backend**: Supabase (PostgreSQL + Edge Functions + Auth + RLS)
+- **AI**: Lovable AI Gateway (Gemini 3 Flash Preview) for enrichment and cluster summaries
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Quick Start
 
-**Use GitHub Codespaces**
+```bash
+git clone https://github.com/itzikhil/GeoLens.git
+cd GeoLens
+npm install
+cp .env.example .env   # fill in your Supabase credentials
+npm run dev             # http://localhost:5173
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Environment Variables
 
-## What technologies are used for this project?
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_SUPABASE_URL` | Yes | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon/public key |
+| `VITE_SUPABASE_PROJECT_ID` | Yes | Supabase project ID |
 
-This project is built with:
+Edge function secrets (set via `supabase secrets set`):
+- `LOVABLE_API_KEY` — Enables AI enrichment
+- `NEWS_API_KEY`, `YOUTUBE_API_KEY`, `X_BEARER_TOKEN`, `TELEGRAM_BOT_TOKEN` — Optional platform integrations
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## How Ingestion Works
 
-## How can I deploy this project?
+1. `ingest-source` fetches RSS/Atom feeds from configured sources
+2. Parses items, deduplicates by `external_item_id`
+3. Inserts new items with status `pending`
+4. Tracks job metadata (fetched, inserted, skipped, errors)
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+See [docs/INGESTION_PIPELINE.md](docs/INGESTION_PIPELINE.md)
 
-## Can I connect a custom domain to my Lovable project?
+## How Enrichment Works
 
-Yes, you can!
+1. `enrich-item` processes pending items via Lovable AI Gateway
+2. Extracts: topics, actors, countries, regions, sentiment, importance
+3. Assigns item to best-matching event cluster (multi-signal scoring)
+4. Creates new cluster if no match above 0.35 threshold
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+See [docs/ENRICHMENT_PIPELINE.md](docs/ENRICHMENT_PIPELINE.md)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## How Clustering Works
+
+Multi-signal Jaccard similarity: actor overlap (30%), country (20%), topic (20%), time proximity (20%), region (10%). Threshold: 0.35.
+
+See [docs/CLUSTERING.md](docs/CLUSTERING.md)
+
+## Current Limitations
+
+- Most frontend pages use hardcoded demo data (not live DB queries)
+- No scheduled ingestion (must trigger manually)
+- RSS parsing is regex-based
+- Clustering threshold is untuned
+- No semantic search / embeddings
+- Watchlists page is a stub
+- Daily brief function is a placeholder
+
+See [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture and data flow |
+| [INGESTION_PIPELINE.md](docs/INGESTION_PIPELINE.md) | Source registry, handlers, dedup, retry |
+| [ENRICHMENT_PIPELINE.md](docs/ENRICHMENT_PIPELINE.md) | AI enrichment and entity extraction |
+| [CLUSTERING.md](docs/CLUSTERING.md) | Clustering algorithm and weights |
+| [SOURCE_REGISTRY.md](docs/SOURCE_REGISTRY.md) | Source schema and supported types |
+| [SECURITY.md](docs/SECURITY.md) | Auth, RLS, RBAC, secret management |
+| [STATUS.md](docs/STATUS.md) | Full implementation status report |
+| [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) | Current limitations |
+| [NEXT_STEPS.md](docs/NEXT_STEPS.md) | Prioritized engineering roadmap |
+| [HANDOFF_TO_CLAUDE_CODE.md](docs/HANDOFF_TO_CLAUDE_CODE.md) | Developer handoff guide |
+
+## Tech Stack
+
+- React 18, TypeScript, Vite
+- Tailwind CSS, shadcn/ui, Radix UI
+- React Router v6, React Query
+- Supabase (PostgreSQL, Edge Functions, Auth)
+- Deno (edge function runtime)
+
+## License
+
+See repository for license details.
