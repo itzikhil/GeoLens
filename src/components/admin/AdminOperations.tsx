@@ -61,7 +61,7 @@ export function AdminOperations() {
   const logAudit = async (action: string, entityType: string, details: any = {}) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase.from('admin_audit_log' as any).insert({
+      await (supabase as any).from('admin_audit_log').insert({
         user_id: user.id,
         action,
         entity_type: entityType,

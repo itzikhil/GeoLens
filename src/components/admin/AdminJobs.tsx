@@ -49,7 +49,7 @@ export function AdminJobs() {
       // Log audit
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from('admin_audit_log' as any).insert({
+        await (supabase as any).from('admin_audit_log').insert({
           user_id: user.id,
           action: 'retry_job',
           entity_type: 'ingestion_job',

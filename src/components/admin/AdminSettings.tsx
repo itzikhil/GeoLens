@@ -62,7 +62,7 @@ export function AdminSettings() {
       // Audit log
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from('admin_audit_log' as any).insert({
+        await (supabase as any).from('admin_audit_log').insert({
           user_id: user.id,
           action: 'update_setting',
           entity_type: 'system_setting',
