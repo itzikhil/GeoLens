@@ -53,8 +53,8 @@ export function AdminSettings() {
   const saveMutation = useMutation({
     mutationFn: async (key: string) => {
       const parsed = JSON.parse(editedValues[key]);
-      const { error } = await supabase
-        .from('system_settings' as any)
+      const { error } = await (supabase as any)
+        .from('system_settings')
         .update({ value: parsed, updated_at: new Date().toISOString() })
         .eq('key', key);
       if (error) throw error;
