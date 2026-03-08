@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Overview from "./pages/Overview";
 import LiveFeed from "./pages/LiveFeed";
 import EventClusters from "./pages/EventClusters";
+import ClusterDetail from "./pages/ClusterDetail";
 import Regions from "./pages/Regions";
 import Actors from "./pages/Actors";
 import Narratives from "./pages/Narratives";
