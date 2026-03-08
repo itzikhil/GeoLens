@@ -37,22 +37,25 @@ const App = () => (
             <SidebarProvider>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
-                <Route element={<ProtectedRoute />}>
-                  <Route element={<AppLayout />}>
-                    <Route path="/" element={<Overview />} />
-                    <Route path="/feed" element={<LiveFeed />} />
-                    <Route path="/clusters" element={<EventClusters />} />
-                    <Route path="/clusters/:slug" element={<ClusterDetail />} />
-                    <Route path="/regions" element={<Regions />} />
-                    <Route path="/regions/:slug" element={<RegionDetail />} />
-                    <Route path="/countries/:slug" element={<CountryDetail />} />
-                    <Route path="/actors" element={<Actors />} />
-                    <Route path="/narratives" element={<Narratives />} />
-                    <Route path="/sources" element={<Sources />} />
+                <Route element={<AppLayout />}>
+                  {/* Public content routes */}
+                  <Route path="/" element={<Overview />} />
+                  <Route path="/feed" element={<LiveFeed />} />
+                  <Route path="/clusters" element={<EventClusters />} />
+                  <Route path="/clusters/:slug" element={<ClusterDetail />} />
+                  <Route path="/regions" element={<Regions />} />
+                  <Route path="/regions/:slug" element={<RegionDetail />} />
+                  <Route path="/countries/:slug" element={<CountryDetail />} />
+                  <Route path="/actors" element={<Actors />} />
+                  <Route path="/narratives" element={<Narratives />} />
+                  <Route path="/sources" element={<Sources />} />
+                  {/* Auth-required routes */}
+                  <Route element={<ProtectedRoute />}>
                     <Route path="/watchlists" element={<Watchlists />} />
-                    <Route element={<AdminRoute />}>
-                      <Route path="/admin" element={<Admin />} />
-                    </Route>
+                  </Route>
+                  {/* Admin-only routes */}
+                  <Route element={<AdminRoute />}>
+                    <Route path="/admin" element={<Admin />} />
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />
