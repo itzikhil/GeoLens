@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Overview from "./pages/Overview";
 import LiveFeed from "./pages/LiveFeed";
 import EventClusters from "./pages/EventClusters";
+import ClusterDetail from "./pages/ClusterDetail";
 import Regions from "./pages/Regions";
 import Actors from "./pages/Actors";
 import Narratives from "./pages/Narratives";
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/" element={<Overview />} />
               <Route path="/feed" element={<LiveFeed />} />
               <Route path="/clusters" element={<EventClusters />} />
+              <Route path="/clusters/:slug" element={<ClusterDetail />} />
               <Route path="/regions" element={<Regions />} />
               <Route path="/actors" element={<Actors />} />
               <Route path="/narratives" element={<Narratives />} />
