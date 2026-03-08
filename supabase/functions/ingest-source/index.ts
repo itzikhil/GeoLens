@@ -218,19 +218,24 @@ async function handleManualURL(source: any, manualUrl?: string): Promise<Handler
 }
 
 // ─── Handler router ─────────────────────────────────────────────────────────
+// Routes by ingest_method first, then source_type. Placeholder handlers are disabled.
 const HANDLER_MAP: Record<string, (source: any, extra?: any) => Promise<HandlerResult>> = {
   rss: handleRSS,
   mainstream: handleRSS,
   niche: handleRSS,
   think_tank: handleRSS,
   government: handleRSS,
-  api: handleNewsAPI,
-  youtube: handleYouTube,
   podcast: handlePodcast,
-  x: handleX,
-  telegram: handleTelegram,
   custom: handleManualURL,
+  // Disabled until real implementations exist:
+  // api: handleNewsAPI,
+  // youtube: handleYouTube,
+  // x: handleX,
+  // telegram: handleTelegram,
 };
+
+// Disabled placeholder handlers return a clear error
+const DISABLED_HANDLERS = new Set(['api', 'youtube', 'x', 'telegram']);
 
 // ─── XML Parsing Helpers ────────────────────────────────────────────────────
 function parseRSSItems(xml: string): Array<{
@@ -373,7 +378,19 @@ serve(async (req) => {
     }
 
     // ── Run handler with retry logic ────────────────────────────────
-    const handler = HANDLER_MAP[source.source_type] || handleRSS;
+    // Prefer ingest_method, fall back to source_type
+    const routeKey = source.ingest_method || source.source_type;
+
+    if (DISABLED_HANDLERS.has(routeKey)) {
+      await supabase.from('ingestion_jobs').update({
+        status: 'failed',
+        finished_at: new Date().toISOString(),
+        error_message: `Handler "${routeKey}" is disabled. No real implementation exists yet.`,
+      }).eq('id', job.id);
+      return respond(200, { skipped: true, reason: `Handler "${routeKey}" disabled — placeholder only`, source_id });
+    }
+
+    const handler = HANDLER_MAP[routeKey] || handleRSS;
     let result: HandlerResult | null = null;
     let lastError = '';
     const maxRetries = 3;
