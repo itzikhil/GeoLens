@@ -200,26 +200,28 @@ export default function ClusterDetail() {
         </div>
       )}
 
-      {/* Source Type Breakdown (live from items) */}
-      {Object.keys(itemsBySourceType).length > 1 && (
+      {/* Source Comparison Panel */}
+      {(clusterItems || []).length > 0 && (
         <div className="intel-card space-y-3">
-          <h2 className="text-sm font-semibold">Coverage by Source Type</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {Object.entries(itemsBySourceType).map(([sourceType, items]) => (
-              <div key={sourceType} className="bg-secondary/50 rounded-md p-3">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-mono text-xs font-medium uppercase">{sourceType}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{items.length} items</span>
-                </div>
-                <ul className="space-y-1">
-                  {items.slice(0, 3).map((item: any) => (
-                    <li key={item.id} className="text-xs text-muted-foreground truncate">• {item.title}</li>
-                  ))}
-                  {items.length > 3 && <li className="text-xs text-muted-foreground">+{items.length - 3} more</li>}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-sm font-semibold">Source Comparison</h2>
+          <SourceComparisonPanel
+            items={(clusterItems || [])
+              .filter((ci: any) => ci.items)
+              .map((ci: any) => ({
+                id: ci.items.id,
+                title: ci.items.title,
+                source_type: ci.items.source_type || 'unknown',
+                summary_short: ci.items.summary_short,
+                stance_label: (ci.items as any).stance_label || null,
+                sentiment_label: (ci.items as any).sentiment_label || null,
+                credibility_score: ci.items.credibility_score,
+                importance_score: ci.items.importance_score,
+                url: ci.items.url,
+                author: ci.items.author,
+                published_at: ci.items.published_at,
+              }))}
+            clusterTitle={cluster.title}
+          />
         </div>
       )}
 
