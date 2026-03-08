@@ -19,7 +19,7 @@ export default function LiveFeed() {
         .limit(50);
 
       if (filter !== "All") {
-        query = query.eq("source_type", filter);
+        query = query.eq("source_type", filter as any);
       }
 
       const { data, error } = await query;
