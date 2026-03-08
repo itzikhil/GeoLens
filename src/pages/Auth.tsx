@@ -3,15 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Globe } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Auth() {
+  const { session, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  if (!authLoading && session) return <Navigate to="/" replace />;
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
