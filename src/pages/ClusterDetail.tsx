@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ScoreIndicator } from "@/components/shared/ScoreIndicator";
 import { TagList } from "@/components/shared/TagList";
 import { ArrowLeft, RefreshCw, Trash2, Pin, Merge, Scissors, Sparkles } from "lucide-react";
+import { SourceComparisonPanel } from "@/components/shared/SourceComparisonPanel";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
