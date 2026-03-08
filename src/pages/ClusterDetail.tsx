@@ -40,7 +40,7 @@ export default function ClusterDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('event_cluster_items')
-        .select('*, items(id, title, summary_short, source_type, published_at, author, actor_tags, country_tags, topic_tags, credibility_score, importance_score, url)')
+        .select('*, items(id, title, summary_short, source_type, published_at, author, actor_tags, country_tags, topic_tags, credibility_score, importance_score, url, stance_label, sentiment_label)')
         .eq('event_cluster_id', cluster!.id)
         .order('relevance_score', { ascending: false });
       if (error) throw error;
