@@ -8,9 +8,11 @@ import {
   Database,
   Bookmark,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +39,9 @@ const mainNav = [
 
 const userNav = [
   { title: "Watchlists", url: "/watchlists", icon: Bookmark },
+];
+
+const adminNav = [
   { title: "Admin", url: "/admin", icon: Settings },
 ];
 
@@ -44,8 +49,15 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAdmin, user, signOut } = useAuth();
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -100,11 +112,32 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {isAdmin && adminNav.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} activeClassName="bg-sidebar-accent text-primary font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="px-4 py-2 border-t border-sidebar-border">
+      <SidebarFooter className="px-4 py-2 border-t border-sidebar-border space-y-2">
+        {!collapsed && user && (
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+        )}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
+              <LogOut className="h-4 w-4" />
+              {!collapsed && <span className="text-xs">Sign out</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         {!collapsed && (
           <p className="text-xs text-muted-foreground font-mono">v0.1.0 — ALPHA</p>
         )}
