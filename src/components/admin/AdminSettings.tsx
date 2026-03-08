@@ -1,57 +1,167 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Save, RefreshCw, Settings2 } from "lucide-react";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+
+interface SettingRow {
+  id: string;
+  key: string;
+  value: any;
+  description: string | null;
+  updated_at: string | null;
+}
+
+const SETTING_LABELS: Record<string, { label: string; help: string }> = {
+  enrichment_prompt: { label: 'Enrichment Prompt Template', help: 'System prompt and field list for AI enrichment of ingested items.' },
+  clustering_rules: { label: 'Clustering Weights & Thresholds', help: 'Scoring weights for actor/time/country/topic/region overlap and minimum threshold.' },
+  scoring_rules: { label: 'Credibility & Importance Scoring', help: 'Factors and defaults for computing item credibility and importance scores.' },
+  daily_brief_prompt: { label: 'Daily Brief Prompt', help: 'System prompt and configuration for automated daily intelligence brief generation.' },
+  ingestion_defaults: { label: 'Ingestion Pipeline Defaults', help: 'Default polling intervals, retry limits, and deduplication threshold.' },
+};
+
 export function AdminSettings() {
-  const configSections = [
-    {
-      title: 'API Keys & Credentials',
-      description: 'Configure API keys for external source integrations. Keys are stored securely in Cloud secrets.',
-      items: [
-        { label: 'News API Key', placeholder: 'Add via Cloud Secrets', configured: false },
-        { label: 'YouTube Data API Key', placeholder: 'Add via Cloud Secrets', configured: false },
-        { label: 'X/Twitter Bearer Token', placeholder: 'Add via Cloud Secrets', configured: false },
-        { label: 'Telegram Bot Token', placeholder: 'Add via Cloud Secrets', configured: false },
-      ],
+  const queryClient = useQueryClient();
+
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('system_settings')
+        .select('*')
+        .order('key');
+      if (error) throw error;
+      return (data || []) as SettingRow[];
     },
-    {
-      title: 'Enrichment Pipeline',
-      description: 'Configure the item processing pipeline. AI enrichment requires an LLM API key.',
-      items: [
-        { label: 'LLM API Key (OpenAI / Anthropic)', placeholder: 'Add via Cloud Secrets', configured: false },
-        { label: 'Auto-summarize new items', placeholder: 'Enabled when LLM key configured', configured: false },
-        { label: 'Auto-cluster items', placeholder: 'Enabled', configured: true },
-        { label: 'Deduplication threshold', placeholder: '0.85', configured: true },
-      ],
+  });
+
+  const [editedValues, setEditedValues] = useState<Record<string, string>>({});
+  const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (settings) {
+      const initial: Record<string, string> = {};
+      for (const s of settings) {
+        initial[s.key] = JSON.stringify(s.value, null, 2);
+      }
+      setEditedValues(initial);
+      setDirtyKeys(new Set());
+    }
+  }, [settings]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (key: string) => {
+      const parsed = JSON.parse(editedValues[key]);
+      const { error } = await (supabase as any)
+        .from('system_settings')
+        .update({ value: parsed, updated_at: new Date().toISOString() })
+        .eq('key', key);
+      if (error) throw error;
+
+      // Audit log
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await (supabase as any).from('admin_audit_log').insert({
+          user_id: user.id,
+          action: 'update_setting',
+          entity_type: 'system_setting',
+          entity_id: key,
+          details: { new_value: parsed },
+        });
+      }
     },
-    {
-      title: 'Ingestion Schedule',
-      description: 'Configure how often sources are polled for new content.',
-      items: [
-        { label: 'RSS poll interval', placeholder: '15 minutes', configured: true },
-        { label: 'API poll interval', placeholder: '30 minutes', configured: true },
-        { label: 'Social media poll interval', placeholder: '60 minutes', configured: true },
-      ],
+    onSuccess: (_, key) => {
+      toast.success(`${SETTING_LABELS[key]?.label || key} saved`);
+      setDirtyKeys(prev => { const n = new Set(prev); n.delete(key); return n; });
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
     },
-  ];
+    onError: (err: any) => toast.error(`Save failed: ${err.message}`),
+  });
+
+  const handleChange = (key: string, val: string) => {
+    setEditedValues(prev => ({ ...prev, [key]: val }));
+    setDirtyKeys(prev => new Set(prev).add(key));
+  };
+
+  const isValidJson = (str: string) => {
+    try { JSON.parse(str); return true; } catch { return false; }
+  };
+
+  if (isLoading) return <div className="text-muted-foreground text-sm font-mono p-4">Loading settings…</div>;
+
+  // Split into credential settings and configurable settings
+  const configSettings = (settings || []).filter(s => SETTING_LABELS[s.key]);
 
   return (
     <div className="space-y-6">
-      {configSections.map((section) => (
-        <div key={section.title} className="intel-card space-y-3">
-          <div>
-            <h3 className="font-semibold text-sm">{section.title}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{section.description}</p>
-          </div>
-          <div className="space-y-2">
-            {section.items.map((item) => (
-              <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-                <span className="text-sm">{item.label}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-muted-foreground">{item.placeholder}</span>
-                  <div className={`w-2 h-2 rounded-full ${item.configured ? 'bg-signal-active' : 'bg-signal-cooled'}`} />
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* API Keys section */}
+      <div className="intel-card space-y-3">
+        <div className="flex items-center gap-2">
+          <Settings2 className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">API Keys & Credentials</h3>
         </div>
-      ))}
+        <p className="text-xs text-muted-foreground">
+          External API keys are managed securely via Lovable Cloud secrets. Configure them in your project's backend settings.
+        </p>
+        <div className="space-y-1.5">
+          {[
+            { label: 'News API Key', configured: false },
+            { label: 'YouTube Data API Key', configured: false },
+            { label: 'X/Twitter Bearer Token', configured: false },
+            { label: 'Telegram Bot Token', configured: false },
+          ].map(item => (
+            <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+              <span className="text-sm">{item.label}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-muted-foreground">Cloud Secret</span>
+                <div className={`w-2 h-2 rounded-full ${item.configured ? 'bg-[hsl(var(--signal-active))]' : 'bg-[hsl(var(--signal-cooled))]'}`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Editable settings */}
+      {configSettings.map(setting => {
+        const meta = SETTING_LABELS[setting.key];
+        const isDirty = dirtyKeys.has(setting.key);
+        const valid = isValidJson(editedValues[setting.key] || '{}');
+
+        return (
+          <div key={setting.key} className="intel-card space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-sm font-semibold">{meta?.label || setting.key}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{meta?.help || setting.description}</p>
+              </div>
+              <Button
+                size="sm"
+                variant={isDirty ? 'default' : 'outline'}
+                disabled={!isDirty || !valid || saveMutation.isPending}
+                onClick={() => saveMutation.mutate(setting.key)}
+              >
+                {saveMutation.isPending ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Save className="w-3 h-3 mr-1" />}
+                Save
+              </Button>
+            </div>
+            <textarea
+              className="w-full min-h-[120px] p-3 rounded-md border border-input bg-background font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-ring"
+              value={editedValues[setting.key] || ''}
+              onChange={(e) => handleChange(setting.key, e.target.value)}
+              spellCheck={false}
+            />
+            {!valid && editedValues[setting.key] && (
+              <p className="text-xs text-destructive">Invalid JSON — fix before saving</p>
+            )}
+            {setting.updated_at && (
+              <p className="text-[10px] font-mono text-muted-foreground">
+                Last updated: {new Date(setting.updated_at).toLocaleString()}
+              </p>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
