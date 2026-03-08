@@ -378,7 +378,19 @@ serve(async (req) => {
     }
 
     // ── Run handler with retry logic ────────────────────────────────
-    const handler = HANDLER_MAP[source.source_type] || handleRSS;
+    // Prefer ingest_method, fall back to source_type
+    const routeKey = source.ingest_method || source.source_type;
+
+    if (DISABLED_HANDLERS.has(routeKey)) {
+      await supabase.from('ingestion_jobs').update({
+        status: 'failed',
+        finished_at: new Date().toISOString(),
+        error_message: `Handler "${routeKey}" is disabled. No real implementation exists yet.`,
+      }).eq('id', job.id);
+      return respond(200, { skipped: true, reason: `Handler "${routeKey}" disabled — placeholder only`, source_id });
+    }
+
+    const handler = HANDLER_MAP[routeKey] || handleRSS;
     let result: HandlerResult | null = null;
     let lastError = '';
     const maxRetries = 3;
